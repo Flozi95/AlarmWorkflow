@@ -1,8 +1,12 @@
 ﻿<Window x:Class="DispatchingTool.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525">
+        Title="Disposition" Height="350" Width="525" SizeToContent="Height">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
         <ItemsControl ItemsSource="{Binding Resources}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -17,12 +21,12 @@
                                         <Setter Property="Background" Value="Red"></Setter>
                                     </DataTrigger>
                                 </Style.Triggers>
-                                
+
                                 <Setter Property="Background" Value="LightGreen"></Setter>
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
-                                            <Border Name="Border"  BorderThickness="2" Padding="{TemplateBinding Padding}" BorderBrush="DarkGray" CornerRadius="3" Background="{TemplateBinding Background}"> 
+                                            <Border Name="Border"  BorderThickness="2" Padding="{TemplateBinding Padding}" BorderBrush="DarkGray" CornerRadius="3" Background="{TemplateBinding Background}">
                                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             </Border>
                                             <ControlTemplate.Triggers>
@@ -39,5 +43,24 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+        <StatusBar Grid.Row="1">
+            <Label Margin="2">
+                <Label.Style>
+                    <Style TargetType="Label">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Error}" Value="True">
+                                <Setter Property="Content" Value="Keine Serververbindung möglich!"/>
+                                <Setter Property="Foreground" Value="Red"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Error}" Value="False">
+                                <Setter Property="Content" Value="Serververbindung aufgebaut."/>
+                                <Setter Property="Foreground" Value="Green"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Label.Style>
+            </Label>
+        </StatusBar>
     </Grid>
 </Window>

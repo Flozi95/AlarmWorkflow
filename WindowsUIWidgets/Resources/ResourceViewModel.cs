@@ -43,6 +43,8 @@ namespace AlarmWorkflow.Windows.UIWidgets.Resources
         /// </summary>
         public ImageSource Icon { get; private set; }
 
+        public bool Dispatched { get { return Resource == null && EmkResourceItem != null; } }
+
         /// <summary>
         /// Gets the display-friendly name of this resource, if configured.
         /// Otherwise returns the full name according to the <see cref="Resource"/>.
