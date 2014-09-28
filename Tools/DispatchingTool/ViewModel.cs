@@ -42,7 +42,7 @@ namespace DispatchingTool
         #endregion
 
         #region Properties
-        
+
         /// <summary>
         /// A collection of <see cref="ResourceItem"/>s.
         /// </summary>
@@ -50,7 +50,6 @@ namespace DispatchingTool
 
         /// <summary>
         /// Gets or sets the current <see cref="Operation"/>.
-        /// At the moment public. Maybe an information in the main window would be helpfull (which operation currently is disblayed)
         /// </summary>
         public Operation CurrentOperation { get; set; }
 
@@ -171,6 +170,13 @@ namespace DispatchingTool
                         return;
                     }
                 }
+                else
+                {
+                    App.Current.Dispatcher.Invoke(Resources.Clear);
+                    CurrentOperation = null;
+                    OnPropertyChanged("CurrentOperation");
+                    return;
+                }
 
                 using (var service = ServiceFactory.GetServiceWrapper<IEmkService>())
                 {
@@ -197,7 +203,7 @@ namespace DispatchingTool
 
             catch (Exception ex)
             {
-                if (ex is EndpointNotFoundException || ex is InvalidOperationException)
+                if (ex is EndpointNotFoundException || ex is InvalidOperationException || ex is CommunicationException)
                 {
                     CurrentOperation = null;
                     Error = true;
@@ -210,15 +216,47 @@ namespace DispatchingTool
                 }
             }
 
-            App.Current.Dispatcher.Invoke(() => OnPropertyChanged("Error"));
-            App.Current.Dispatcher.Invoke(() => OnPropertyChanged("Resources"));
-
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                OnPropertyChanged("Error");
+                OnPropertyChanged("Resources");
+                OnPropertyChanged("CurrentOperation");
+            });
         }
 
         #region Implementation of IDispositioningServiceCallback
 
         public void OnEvent(DispositionEventArgs evt)
         {
+            if (CurrentOperation != null && evt.OperationId == CurrentOperation.Id)
+            {
+                if (evt.Action == DispositionEventArgs.ActionType.Dispatch)
+                {
+                    using (var service = ServiceFactory.GetServiceWrapper<IEmkService>())
+                    {
+                        EmkResource emkResource = service.Instance.GetAllResources().FirstOrDefault(x => x.IsActive && x.Id == evt.EmkResourceId);
+                        if (emkResource != null)
+                        {
+                            ResourceItem resourceItem = new ResourceItem(emkResource);
+                            resourceItem.CanGetDispatched = true;
+                            resourceItem.Dispatched = true;
+                            App.Current.Dispatcher.Invoke(() =>
+                            {
+                                OnPropertyChanged("Resources");
+                                Resources.Add(resourceItem);
+                            });
+                        }
+                    }
+                }
+                else if (evt.Action == DispositionEventArgs.ActionType.Recall)
+                {
+                    ResourceItem resource = Resources.FirstOrDefault(x => x.EmkResourceItem.Id == evt.EmkResourceId);
+                    if (resource != null)
+                    {
+                        Resources.Remove(resource);
+                    }
+                }
+            }
         }
 
         #endregion
@@ -227,6 +265,15 @@ namespace DispatchingTool
 
         public void OnOperationAcknowledged(int id)
         {
+            if (CurrentOperation != null && CurrentOperation.Id == id)
+            {
+                CurrentOperation = null;
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    Resources.Clear();
+                    OnPropertyChanged("CurrentOperation");
+                });
+            }
         }
 
         #endregion
