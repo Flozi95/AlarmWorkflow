@@ -20,6 +20,7 @@ using System.Linq;
 using System.Web.Mvc;
 using System.Web.UI;
 using AlarmWorkflow.Backend.ServiceContracts.Communication;
+using AlarmWorkflow.BackendService.DispositioningContracts;
 using AlarmWorkflow.BackendService.FileTransferContracts.Client;
 using AlarmWorkflow.BackendService.ManagementContracts;
 using AlarmWorkflow.BackendService.ManagementContracts.Emk;
@@ -182,6 +183,14 @@ namespace AlarmWorkflow.Website.Reports.Areas.Display.Controllers
                 {
                     EmkResource emk = emkResources.FirstOrDefault(item => item.IsActive && item.IsMatch(resource));
                     filteredResources.Add(new ResourceObject(emk, resource));
+                }
+
+                var disposingService = ServiceFactory.GetCallbackServiceWrapper<IDispositioningService>(new DispositioningServiceCallback());
+                string[] dispatchedResources = disposingService.Instance.GetDispatchedResources(operation.Id);
+                foreach (string resource in dispatchedResources)
+                {
+                    EmkResource emk = emkResources.FirstOrDefault(x => x.IsActive && x.Id == resource);
+                    filteredResources.Add(new ResourceObject(emk, null));
                 }
                 data.Resources = filteredResources;
 

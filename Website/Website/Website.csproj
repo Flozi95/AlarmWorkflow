@@ -46,6 +46,9 @@
     <FilesToIncludeForPublish>OnlyFilesToRunTheApp</FilesToIncludeForPublish>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AlarmWorkflow.BackendService.DispositioningContracts">
+      <HintPath>..\..\Build\AlarmWorkflow.BackendService.DispositioningContracts.dll</HintPath>
+    </Reference>
     <Reference Include="AlarmWorkflow.BackendService.FileTransferContracts">
       <HintPath>..\..\Build\AlarmWorkflow.BackendService.FileTransferContracts.dll</HintPath>
     </Reference>
@@ -189,9 +192,11 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Areas\Display\Controllers\AlarmController.cs" />
+    <Compile Include="Areas\Display\Controllers\DispatchController.cs" />
     <Compile Include="Areas\Display\DisplayAreaRegistration.cs" />
     <Compile Include="Areas\Display\Models\GetLastOperationData.cs" />
     <Compile Include="Areas\Display\Models\ResetOperationData.cs" />
+    <Compile Include="Areas\Display\Models\ResourceItem.cs" />
     <Compile Include="Areas\Display\Models\ResourceObject.cs" />
     <Compile Include="Areas\Display\Models\ResourcesData.cs" />
     <Compile Include="Areas\Display\Models\WebsiteConfiguration.cs" />
@@ -204,8 +209,14 @@
     </Compile>
     <Compile Include="Areas\Reporting\Models\ExportUtilities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\app\area-dispatch-index.css" />
     <Content Include="Content\app\area-alarm-indexlayout.css" />
     <Content Include="Content\app\area-alarm-index.css" />
     <Content Include="Content\themes\base\images\ui-bg_flat_0_aaaaaa_40x100.png" />
@@ -338,7 +349,7 @@
     <Content Include="Areas\Display\Views\Alarm\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Areas\Display\Views\Alarm\IndexLayout.cshtml" />
+    <Content Include="Areas\Display\Views\IndexLayout.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\Build\Backend.config">
@@ -347,6 +358,15 @@
     <Content Include="..\..\Build\Backend.Services.config">
       <Link>Backend.Services.config</Link>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Areas\Display\Views\Dispatch\Index.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

@@ -1,4 +1,4 @@
-﻿#paneError {
+#paneError {
     display: table;
     height: 100%;
     width: 100%;
@@ -51,34 +51,62 @@
             margin: 0 auto;
         }
 
-td.alarm {
-    border: 1px solid #000000;
-}
+    #paneOperation * {
+        margin: 0;
+        text-align: center;
+    }
 
-.opcolumn {
-    padding: 0;
-    margin: 0;
-    height: 40%;
-    width: 50%;
-}
-
-div.opcell {
+#resources {
     width: 100%;
-    height: 100%;
+    text-align: center;
 }
 
-.oresource {
+.resource button {
+    font-size: 40px;
     font-weight: bold;
-    float: left;
-    margin-left: 10px;
-    border: 1px solid #000000;
-    -ms-border-radius: 5px;
-    border-radius: 5px;
-    background: orange;
+    margin: 20px !important;
+    padding: 20px 40px;
+    border: 1px solid lightgray;
+    border-radius: 7px;
+    background-color: greenyellow;
+    cursor: pointer;
 }
-.alarmed {
+
+@media(min-width: 400px) {
+    .resource {
+        width: 50%;
+        float: left;
+    }
+}
+
+@media (min-width: 600px) {
+    .resource {
+        width: 33%;
+    }
+}
+
+@media (min-width: 800px) {
+    .resource {
+        width: 25%;
+    }
+}
+
+@media(min-width: 1000px) {
+    #resources {
+        width: 80%!important;
+        margin: 0 auto!important;
+    }
+}
+
+.resource button:hover {
+    border: 1px solid black;
+}
+
+.fixed {
+    cursor: not-allowed !important;
     background-color: red !important;
 }
-div.oresource {
-    padding: 15px;
+
+.dispatched {
+    background-color: orange !important;
 }

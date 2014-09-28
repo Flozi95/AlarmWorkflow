@@ -1,5 +1,4 @@
 @{
-    Layout = "IndexLayout.cshtml";
     ViewBag.Title = "Alarmanzeige";
 
     var config = AlarmWorkflow.Website.Reports.Areas.Display.Models.WebsiteConfiguration.Instance;
@@ -57,6 +56,33 @@
 
         });
     }
+
+    function updateResources() {
+        var orsc = "";
+        // Resources
+        $.get("/Display/Alarm/GetFilteredResources/" + currentOpId, function(data) {
+            data.Resources.forEach(function(resource) {
+                var value;
+                if (resource.Emk == null || resource.Emk.DisplayName.length === 0) {
+                    value = "<div class=\"oresource\">" + resource.Resource.FullName + "</div>";
+                } else {
+                    if (resource.Resource != null) {
+                        value = "<div class=\"oresource alarmed\">" + resource.Emk.DisplayName + "</div>";
+                    }else{
+                        value = "<div class=\"oresource\">" + resource.Emk.DisplayName + "</div>";
+                    }
+                    if (resource.Emk.IconFileName != null && resource.Emk.IconFileName.length !== 0) {
+                        $.ajax({ url: '/Display/Alarm/GetResourceImage?id=' + encodeURIComponent(resource.Emk.Id), type: 'HEAD', success:
+                        function(){
+                            value = "<img class=\"oresource\" src=\"/Display/Alarm/GetResourceImage?id=" + encodeURIComponent(resource.Emk.Id) + "\" height=\"200\" alt=\"Fahrzeugbild\">";
+                        }});
+                    }
+                }
+                orsc += value;
+            });
+            $("#orsc").html(orsc);
+        });
+    };
 
     function loadOperationData() {
         console.log("Loading Operation");
@@ -118,24 +144,7 @@
 
                         okeywords = okeywords.replace("  ", " ");
                         $("#okeywords").text(okeywords);
-                        var orsc = "";
-                        // Resources
-                        $.get("/Display/Alarm/GetFilteredResources/" + currentOpId, function(data) {
-                            data.Resources.forEach(function(resource) {
-                                var value;
-                                if (resource.Emk == null || resource.Emk.DisplayName.length === 0) {
-                                    value = "<div class=\"oresource\">" + resource.Resource.FullName + "</div>";
-                                } else {
-                                    if (resource.Emk.IconFileName != null && resource.Emk.IconFileName.length !== 0) {
-                                        value = "<img class=\"oresource\" src=\"/Display/Alarm/GetResourceImage?id=" + encodeURIComponent(resource.Emk.Id) + "\" height=\"200\" alt=\"Fahrzeugbild\">";
-                                    } else {
-                                        value = "<div class=\"oresource\">" + resource.Emk.DisplayName + "</div>";
-                                    }
-                                }
-                                orsc += value;
-                            });
-                            $("#orsc").html(orsc);
-                        });
+                        updateResources();
 
 
                         $("#paneOperation").show();
@@ -200,6 +209,8 @@
 
                         osm.setView([result.op.Einsatzort.GeoLatitude,result.op.Einsatzort.GeoLongitude], 16);
                         L.marker([result.op.Einsatzort.GeoLatitude, result.op.Einsatzort.GeoLongitude]).addTo(osm);
+                    } else {
+                        updateResources();
                     }
                 }
             } else {
@@ -246,7 +257,7 @@
 <div id="paneError">
     <span>Ein Fehler ist aufgetreten.<br /> Bitte sehen Sie in den Serverlogs nach.</span>
 </div>
-<!-- Pane to be displayed in case of an error-->
+<!-- Pane to be displayed if no operation was found (idle)-->
 <div id="paneIdle">
     <span>Es liegt kein Einsatz vor.</span>
 </div>

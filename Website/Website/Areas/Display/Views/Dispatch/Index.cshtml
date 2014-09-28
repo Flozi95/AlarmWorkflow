@@ -1,0 +1,76 @@
+@{
+    ViewBag.Title = "Einheiten disponieren";
+}
+@section scripts
+{
+    <script>
+        function update() {
+            $.get('/Display/Alarm/GetLatestOperation', function(result) {
+                if (result.success == true) {
+                    if (result.op == null) {
+                        $('#paneIdle').show();
+                        $('#paneError').hide();
+                        $('#paneOperation').hide();
+
+                    } else {
+                        $('#paneIdle').hide();
+                        $('#paneError').hide();
+                        $('#paneOperation').show();
+                        var date = new Date(parseInt(result.op.Timestamp.substr(6)));
+                        $('#operation').text(date.toLocaleString());
+                        $.get("/Display/Dispatch/Resources/" + result.op.Id, function(resources) {
+                            $('#resources').html('');
+                            $.each(resources, function(i, resource) {
+                                if (resource.CanGetDispatched) {
+                                    if (resource.Dispatched) {
+                                        $("#resources").append("<div class='resource'><button type='button' id='" + resource.EmkResourceItem.Id + "' class='dispatched'>" + resource.EmkResourceItem.DisplayName + "</button></div>");
+                                    } else {
+                                        $("#resources").append("<div class='resource'><button type='button' id='" + resource.EmkResourceItem.Id + "'>" + resource.EmkResourceItem.DisplayName + "</button></div>");
+                                    }
+                                } else {
+                                    $("#resources").append("<div class='resource'><button type='button' class='fixed'>" + resource.EmkResourceItem.DisplayName + "</button></div>");
+                                }
+                            });
+                            $('.resource button').click(function () {
+                                if ($(this).hasClass('fixed')) {
+                                } else {
+                                    var id = $(this).attr('id');
+                                    if ($(this).hasClass('dispatched')) {
+                                        $(this).removeClass('dispatched');
+                                    } else {
+                                        $(this).addClass('dispatched');
+                                    }
+                                    $.get("/Display/Dispatch/Dispatch?operation=" + result.op.Id + "&resource=" + id);
+                                }
+                                $("#resources").focus();
+                            });
+                        });
+                    }
+                }
+            }).fail(function () {
+                // Reset current operation and display warning.
+                $("#paneOperation").hide();
+                $("#paneIdle").hide();
+                $("#paneError").show();
+            });
+        }
+
+        setInterval(update, 2000);
+        update();
+    </script>
+}
+<link rel="stylesheet" href="@Styles.Url("~/Content/app/area-dispatch-index.css")" />
+<!-- Pane to be displayed in case of an error-->
+<div id="paneError">
+    <span>Ein Fehler ist aufgetreten.<br /> Bitte sehen Sie in den Serverlogs nach.</span>
+</div>
+<!-- Pane to be displayed if no operation was found (idle)-->
+<div id="paneIdle">
+    <span>Es liegt kein Einsatz vor.</span>
+</div>
+<div id="paneOperation">
+    <h1>Einheiten für den Einsatz vom <span id="operation"></span> disponieren.</h1>
+    <div id="resources">
+
+    </div>
+</div>

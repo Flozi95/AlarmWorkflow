@@ -1,4 +1,4 @@
-﻿// This file is part of AlarmWorkflow.
+// This file is part of AlarmWorkflow.
 // 
 // AlarmWorkflow is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,22 +14,16 @@
 // along with AlarmWorkflow.  If not, see <http://www.gnu.org/licenses/>.
 
 using AlarmWorkflow.BackendService.ManagementContracts.Emk;
-using AlarmWorkflow.Windows.UIContracts.ViewModels;
+using AlarmWorkflow.Shared.Core;
 
-namespace DispatchingTool
+namespace AlarmWorkflow.Website.Reports.Areas.Display.Models
 {
-	/// <summary>
+    /// <summary>
     /// A class conatining all information required for dispatching resources. 
     /// (If a resource is allready dispatched or can be "recalled")
     /// </summary>
-    public class ResourceItem : ViewModelBase
+    public class ResourceItem
     {
-		#region Fields
-		
-        private bool _dispatched;
-		
-		#endregion
-
         #region Constructor
 
         /// <summary>
@@ -44,8 +38,8 @@ namespace DispatchingTool
         }
 
         #endregion
-		
-		#region Properties
+
+        #region Properties
 
         /// <summary>
         /// Gets the underlying <see cref="EmkResource"/>-instance
@@ -60,19 +54,8 @@ namespace DispatchingTool
         /// <summary>
         /// Gets and sets whether the underlying resource is dispatched.
         /// </summary>
-        public bool Dispatched
-        {
-            get { return _dispatched; }
-            set
-            {
-                if (_dispatched != value)
-                {
-                    _dispatched = value;
-                    OnPropertyChanged("Dispatched");
-                }
-            }
-        }
-		
-		#endregion 
+        public bool Dispatched { get; set; }
+
+        #endregion
     }
 }

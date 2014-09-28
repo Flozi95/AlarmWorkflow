@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with AlarmWorkflow.  If not, see <http://www.gnu.org/licenses/>.
 
+using System;
 using AlarmWorkflow.BackendService.ManagementContracts.Emk;
 using AlarmWorkflow.Shared.Core;
 
@@ -43,11 +44,14 @@ namespace AlarmWorkflow.Website.Reports.Areas.Display.Models
         /// The constructor for creating a new <see cref="ResourceObject"/>
         /// </summary>
         /// <param name="emk">The filtered entry. Can be null!</param>
-        /// <param name="resource">The original entry. Can't be null!</param>
+        /// <param name="resource">The original entry. Can be null if the emkresource is not null!</param>
+        /// <exception cref="InvalidOperationException">Get's thrown if no operation was given.</exception>
         public ResourceObject(EmkResource emk, OperationResource resource)
         {
-            Assertions.AssertNotNull(resource, "resource");
-
+            if (emk == null && resource == null)
+            {
+                throw new InvalidOperationException(Properties.Resources.NoResourceGiven);
+            }
             Emk = emk;
             Resource = resource;
         }
