@@ -72,10 +72,10 @@ namespace AlarmWorkflow.Website.Reports.Areas.Display.Controllers
 
         /// <summary>
         /// Returns a JSON List containing all emkresources. 
-        /// This resources get marked as dipatched/alarmed if allready done (by Windows Tool or alarmsource)
+        /// This resources get marked as dispatched/alarmed if allready done (by Windows Tool or alarmsource)
         /// </summary>
         /// <param name="id">The if of the operation which is requested.</param>
-        /// <returns>Returns a JSON List containing all emkresources. (<see cref="ResourceItem"/></returns>
+        /// <returns>Returns a JSON List containing all emkresources (list of <see cref="ResourceItem"/>s)</returns>
         public ActionResult Resources(int id)
         {
             Operation operation;
@@ -92,7 +92,7 @@ namespace AlarmWorkflow.Website.Reports.Areas.Display.Controllers
             }
             catch (Exception)
             {
-                return null;
+                return new HttpStatusCodeResult(HttpStatusCode.InternalServerError);
             }
             List<ResourceItem> resources = new List<ResourceItem>();
             var disposingService = ServiceFactory.GetCallbackServiceWrapper<IDispositioningService>(new DispositioningServiceCallback());

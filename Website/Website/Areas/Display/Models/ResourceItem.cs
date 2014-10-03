@@ -19,11 +19,17 @@ using AlarmWorkflow.Shared.Core;
 namespace AlarmWorkflow.Website.Reports.Areas.Display.Models
 {
     /// <summary>
-    /// A class conatining all information required for dispatching resources. 
-    /// (If a resource is allready dispatched or can be "recalled")
+    /// A class containing all information required for dispatching resources. 
+    /// (If a resource is allready dispatched and can "recalled" or is fixed by the alarming institute)
     /// </summary>
     public class ResourceItem
     {
+        #region Fields
+
+        private bool _dispatched;
+
+        #endregion
+
         #region Constructor
 
         /// <summary>
@@ -47,12 +53,12 @@ namespace AlarmWorkflow.Website.Reports.Areas.Display.Models
         public EmkResource EmkResourceItem { get; private set; }
 
         /// <summary>
-        /// Resources alarmed by the alarmsource can not be recalled. In this case this property is false.
+        /// Resources alarmed by the alarming institute can not be recalled. In this case this property is false.
         /// </summary>
         public bool CanGetDispatched { get; set; }
 
         /// <summary>
-        /// Gets and sets whether the underlying resource is dispatched.
+        /// Gets and sets whether the resource is dispatched or not.
         /// </summary>
         public bool Dispatched { get; set; }
 
