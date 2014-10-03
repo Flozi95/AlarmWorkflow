@@ -19,17 +19,17 @@ using AlarmWorkflow.Windows.UIContracts.ViewModels;
 
 namespace DispatchingTool
 {
-	/// <summary>
-    /// A class conatining all information required for dispatching resources. 
-    /// (If a resource is allready dispatched or can be "recalled")
+    /// <summary>
+    /// A class containing all information required for dispatching resources. 
+    /// (If a resource is allready dispatched and can "recalled" or is fixed by the alarming institute)
     /// </summary>
     public class ResourceItem : ViewModelBase
     {
-		#region Fields
-		
+        #region Fields
+
         private bool _dispatched;
-		
-		#endregion
+
+        #endregion
 
         #region Constructor
 
@@ -45,8 +45,8 @@ namespace DispatchingTool
         }
 
         #endregion
-		
-		#region Properties
+
+        #region Properties
 
         /// <summary>
         /// Gets the underlying <see cref="EmkResource"/>-instance
@@ -54,12 +54,12 @@ namespace DispatchingTool
         public EmkResource EmkResourceItem { get; private set; }
 
         /// <summary>
-        /// Resources alarmed by the alarmsource can not be recalled. In this case this property is false.
+        /// Resources alarmed by the alarming institute can not be recalled. In this case this property is false.
         /// </summary>
         public bool CanGetDispatched { get; set; }
 
         /// <summary>
-        /// Gets and sets whether the underlying resource is dispatched.
+        /// Gets and sets whether the resource is dispatched or not.
         /// </summary>
         public bool Dispatched
         {
@@ -73,7 +73,7 @@ namespace DispatchingTool
                 }
             }
         }
-		
-		#endregion 
+
+        #endregion
     }
 }

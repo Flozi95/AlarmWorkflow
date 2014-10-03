@@ -81,6 +81,7 @@ namespace DispatchingTool
                 //No idea why this could be so.
                 return;
             }
+
             if (_disposingService.Instance.GetDispatchedResources(CurrentOperation.Id).Contains(id))
             {
                 _disposingService.Instance.Recall(CurrentOperation.Id, id);
@@ -94,6 +95,8 @@ namespace DispatchingTool
         }
 
         #endregion
+
+        #region De-/Constructor
 
         public ViewModel()
         {
@@ -131,16 +134,24 @@ namespace DispatchingTool
             }
         }
 
+        #endregion
+
+        #region Event-Handler
+
         private void timer_Tick(object sender, EventArgs e)
         {
             Task.Factory.StartNew(Update);
         }
 
+        #endregion
+
+        #region Methods
+
         private void Update()
         {
-
             try
             {
+                //Reconnect to the service if the last connection was not successful.
                 if (Error)
                 {
                     if (_disposingService != null)
@@ -156,6 +167,10 @@ namespace DispatchingTool
                     _operationService = ServiceFactory.GetCallbackServiceWrapper<IOperationService>(this);
 
                 }
+
+                Error = false;
+
+                //Get last operation. At the moment only dispatching works for the last operation.
                 IList<int> operationIds = _operationService.Instance.GetOperationIds(Constants.OfpMaxAge, Constants.OfpOnlyNonAcknowledged, 1);
                 int operationId = operationIds.FirstOrDefault();
                 if (operationId != 0)
@@ -178,6 +193,7 @@ namespace DispatchingTool
                     return;
                 }
 
+                //Get the emk-configuration 
                 using (var service = ServiceFactory.GetServiceWrapper<IEmkService>())
                 {
                     List<EmkResource> emkResources = service.Instance.GetAllResources().Where(x => x.IsActive).ToList();
@@ -185,11 +201,14 @@ namespace DispatchingTool
                     foreach (EmkResource emkResource in emkResources)
                     {
                         ResourceItem resourceItem = new ResourceItem(emkResource);
+
+                        //Resources alarmed by the alarming institute can not be dispatched or recalled!
                         resourceItem.CanGetDispatched = !alarmedResources.Any(x => emkResource.IsMatch(x));
                         App.Current.Dispatcher.Invoke(() => Resources.Add(resourceItem));
                     }
                 }
 
+                //Get the resources which are allready dispatched to current operation.
                 string[] dispatchedResources = _disposingService.Instance.GetDispatchedResources(CurrentOperation.Id);
                 foreach (ResourceItem item in Resources)
                 {
@@ -198,11 +217,10 @@ namespace DispatchingTool
                         item.Dispatched = true;
                     }
                 }
-                Error = false;
             }
-
             catch (Exception ex)
             {
+                //This exceptions could occur if the service connection was lost! All other exceptions are not ok --> Throw them!
                 if (ex is EndpointNotFoundException || ex is InvalidOperationException || ex is CommunicationException)
                 {
                     CurrentOperation = null;
@@ -216,6 +234,7 @@ namespace DispatchingTool
                 }
             }
 
+            //Update the properties
             App.Current.Dispatcher.Invoke(() =>
             {
                 OnPropertyChanged("Error");
@@ -224,8 +243,14 @@ namespace DispatchingTool
             });
         }
 
+        #endregion
+
         #region Implementation of IDispositioningServiceCallback
 
+        /// <summary>
+        /// Called by the service after a resource was dispatched or recalled.
+        /// </summary>
+        /// <param name="evt">The event data that describes the event.</param>
         public void OnEvent(DispositionEventArgs evt)
         {
             if (CurrentOperation != null && evt.OperationId == CurrentOperation.Id)
@@ -263,6 +288,10 @@ namespace DispatchingTool
 
         #region Implementation of IOperationServiceCallback
 
+        /// <summary>
+        /// Called when an operation was acknowledged.
+        /// </summary>
+        /// <param name="id">The id of the operation that was acknowledged.</param>
         public void OnOperationAcknowledged(int id)
         {
             if (CurrentOperation != null && CurrentOperation.Id == id)

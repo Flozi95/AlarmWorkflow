@@ -15,19 +15,21 @@
 
 using System.Windows;
 using AlarmWorkflow.Shared.Diagnostics;
+using AlarmWorkflow.Shared.Diagnostics.Reports;
 
 namespace DispatchingTool
 {
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
+    public partial class App
     {
         #region Overrides of Application
 
         protected override void OnStartup(StartupEventArgs e)
         {
             Logger.Instance.Initialize("Disposition");
+            ErrorReportManager.RegisterAppDomainUnhandledExceptionListener("Disposition");
             base.OnStartup(e);
         }
 
