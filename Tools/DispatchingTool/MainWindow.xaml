@@ -1,7 +1,7 @@
 ﻿<Window x:Class="DispatchingTool.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Disposition" Height="350" Width="525" SizeToContent="Height" Icon="Logo.png">
+        Title="Disposition" Height="350" Width="525" SizeToContent="Height" Icon="Logo.ico">
   
     <Grid>
         <Label HorizontalAlignment="Center" Padding="20" VerticalAlignment="Center" Background="White" FontWeight="Bold" FontSize="24">
