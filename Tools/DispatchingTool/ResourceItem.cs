@@ -17,17 +17,47 @@ using AlarmWorkflow.BackendService.ManagementContracts.Emk;
 using AlarmWorkflow.Shared.Core;
 using AlarmWorkflow.Windows.UIContracts.ViewModels;
 
-namespace DispatchingTool
+namespace AlarmWorkflow.Tools.Dispatching
 {
     /// <summary>
     /// A class containing all information required for dispatching resources. 
-    /// (If a resource is allready dispatched and can "recalled" or is fixed by the alarming institute)
+    /// (If a resource is already dispatched and can "recalled" or is fixed by the alarming institute)
     /// </summary>
     public class ResourceItem : ViewModelBase
     {
         #region Fields
 
-        private bool _dispatched;
+        private bool _isDispatched;
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the underlying <see cref="EmkResource"/>-instance.
+        /// </summary>
+        public EmkResource EmkResourceItem { get; private set; }
+
+        /// <summary>
+        /// Gets/sets whether or not this resource can be manually dispatched or recalled.
+        /// </summary>
+        public bool IsManualDispatchAllowed { get; set; }
+
+        /// <summary>
+        /// Gets and sets whether the resource is dispatched or not.
+        /// </summary>
+        public bool IsDispatched
+        {
+            get { return _isDispatched; }
+            set
+            {
+                if (_isDispatched != value)
+                {
+                    _isDispatched = value;
+                    OnPropertyChanged("IsDispatched");
+                }
+            }
+        }
 
         #endregion
 
@@ -36,42 +66,12 @@ namespace DispatchingTool
         /// <summary>
         /// Creates a new instance of a ResourceItem.
         /// </summary>
-        /// <param name="emkResource">The <see cref="EmkResource"/>. May not be null!</param>
+        /// <param name="emkResource">The <see cref="EmkResource"/>. Must not be null!</param>
         public ResourceItem(EmkResource emkResource)
         {
             Assertions.AssertNotNull(emkResource, "emkResource");
 
             EmkResourceItem = emkResource;
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the underlying <see cref="EmkResource"/>-instance
-        /// </summary>
-        public EmkResource EmkResourceItem { get; private set; }
-
-        /// <summary>
-        /// Resources alarmed by the alarming institute can not be recalled. In this case this property is false.
-        /// </summary>
-        public bool CanGetDispatched { get; set; }
-
-        /// <summary>
-        /// Gets and sets whether the resource is dispatched or not.
-        /// </summary>
-        public bool Dispatched
-        {
-            get { return _dispatched; }
-            set
-            {
-                if (_dispatched != value)
-                {
-                    _dispatched = value;
-                    OnPropertyChanged("Dispatched");
-                }
-            }
         }
 
         #endregion

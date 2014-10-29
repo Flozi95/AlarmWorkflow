@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DispatchingTool.Properties {
+namespace AlarmWorkflow.Tools.Dispatching.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace DispatchingTool.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DispatchingTool.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("AlarmWorkflow.Tools.Dispatching.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -57,15 +57,6 @@ namespace DispatchingTool.Properties {
             }
             set {
                 resourceCulture = value;
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Kann nicht zum Server verbinden. Stellen Sie sicher, dass die Serveradresse richtig eingestellt ist und dass der Service erreichbar ist und versuchen Sie es erneut..
-        /// </summary>
-        internal static string NoServiceConnection {
-            get {
-                return ResourceManager.GetString("NoServiceConnection", resourceCulture);
             }
         }
     }

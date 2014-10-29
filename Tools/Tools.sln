@@ -1,8 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
-MinimumVisualStudioVersion = 10.0.40219.1
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MigrateUserSettingsFile", "MigrateUserSettingsFile\MigrateUserSettingsFile.csproj", "{207DBCF8-6F20-4F32-AF77-5BED6E21C3EE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DispatchingTool", "DispatchingTool\DispatchingTool.csproj", "{FDDF8FE0-AA7B-45B9-B2BB-ED48A95B454B}"

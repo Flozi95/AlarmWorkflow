@@ -17,7 +17,7 @@ using System.Windows;
 using AlarmWorkflow.Shared.Diagnostics;
 using AlarmWorkflow.Shared.Diagnostics.Reports;
 
-namespace DispatchingTool
+namespace AlarmWorkflow.Tools.Dispatching
 {
     /// <summary>
     /// Interaction logic for App.xaml

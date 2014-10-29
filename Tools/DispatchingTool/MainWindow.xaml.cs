@@ -15,17 +15,21 @@
 
 using System.Windows;
 
-namespace DispatchingTool
+namespace AlarmWorkflow.Tools.Dispatching
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
+        #region Constructors
+
         public MainWindow()
         {
             InitializeComponent();
             DataContext = new ViewModel();
         }
+
+        #endregion
     }
 }

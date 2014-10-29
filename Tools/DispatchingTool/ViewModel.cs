@@ -23,20 +23,21 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using AlarmWorkflow.Backend.ServiceContracts.Communication;
 using AlarmWorkflow.BackendService.DispositioningContracts;
-using AlarmWorkflow.Shared.Core;
-using AlarmWorkflow.Shared.Diagnostics;
-using AlarmWorkflow.Windows.UIContracts.ViewModels;
 using AlarmWorkflow.BackendService.ManagementContracts;
 using AlarmWorkflow.BackendService.ManagementContracts.Emk;
+using AlarmWorkflow.Shared.Core;
+using AlarmWorkflow.Shared.Diagnostics;
+using AlarmWorkflow.Windows.UIContracts;
+using AlarmWorkflow.Windows.UIContracts.ViewModels;
 
-namespace DispatchingTool
+namespace AlarmWorkflow.Tools.Dispatching
 {
     [CallbackBehavior(ConcurrencyMode = ConcurrencyMode.Multiple, UseSynchronizationContext = false)]
-    public class ViewModel : ViewModelBase, IDispositioningServiceCallback, IOperationServiceCallback
+    class ViewModel : ViewModelBase, IDispositioningServiceCallback, IOperationServiceCallback
     {
         #region Fields
 
-        private WrappedService<IDispositioningService> _disposingService;
+        private WrappedService<IDispositioningService> _dispositioningService;
         private WrappedService<IOperationService> _operationService;
 
         #endregion
@@ -44,9 +45,9 @@ namespace DispatchingTool
         #region Properties
 
         /// <summary>
-        /// A collection of <see cref="ResourceItem"/>s.
+        /// Gets a collection of <see cref="ResourceItem"/>s.
         /// </summary>
-        public ObservableCollection<ResourceItem> Resources { get; set; }
+        public ObservableCollection<ResourceItem> Resources { get; private set; }
 
         /// <summary>
         /// Gets or sets the current <see cref="Operation"/>.
@@ -54,11 +55,13 @@ namespace DispatchingTool
         public Operation CurrentOperation { get; set; }
 
         /// <summary>
-        /// Gets or sets if an error is currently "available"
+        /// Gets if an error is currently "available"
         /// </summary>
         public bool Error { get; private set; }
 
         #endregion
+
+        #region Commands
 
         #region DispatchCommand
 
@@ -67,46 +70,49 @@ namespace DispatchingTool
         /// </summary>
         public ICommand DispatchCommand { get; set; }
 
-        /// <summary>
-        /// Fired when a resource gets clicked.
-        /// </summary>
-        /// <param name="param">Should be the id of the sending button</param>
-        public void DispatchCommand_Execute(object param)
+        private void DispatchCommand_Execute(object param)
         {
             string id = param as string;
             ResourceItem item = Resources.FirstOrDefault(x => x.EmkResourceItem.Id == id);
             if (item == null)
             {
-                //Actually this should not happen!
-                //No idea why this could be so.
                 return;
             }
 
-            if (_disposingService.Instance.GetDispatchedResources(CurrentOperation.Id).Contains(id))
+            try
             {
-                _disposingService.Instance.Recall(CurrentOperation.Id, id);
-                item.Dispatched = false;
+                if (_dispositioningService.Instance.GetDispatchedResources(CurrentOperation.Id).Contains(id))
+                {
+                    _dispositioningService.Instance.Recall(CurrentOperation.Id, id);
+                    item.IsDispatched = false;
+                }
+                else
+                {
+                    _dispositioningService.Instance.Dispatch(CurrentOperation.Id, id);
+                    item.IsDispatched = true;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                _disposingService.Instance.Dispatch(CurrentOperation.Id, id);
-                item.Dispatched = true;
+                Logger.Instance.LogException(this, ex);
             }
         }
 
         #endregion
 
-        #region De-/Constructor
+        #endregion
 
-        public ViewModel()
+        #region Constructors
+
+        internal ViewModel()
+            : base()
         {
             Resources = new ObservableCollection<ResourceItem>();
-            DispatchCommand = new RelayCommand(DispatchCommand_Execute);
             Error = false;
 
             try
             {
-                _disposingService = ServiceFactory.GetCallbackServiceWrapper<IDispositioningService>(this);
+                _dispositioningService = ServiceFactory.GetCallbackServiceWrapper<IDispositioningService>(this);
                 _operationService = ServiceFactory.GetCallbackServiceWrapper<IOperationService>(this);
             }
             catch (EndpointNotFoundException)
@@ -122,11 +128,25 @@ namespace DispatchingTool
             timer.Start();
         }
 
-        ~ViewModel()
+        #endregion
+
+        #region Methods
+
+        private void timer_Tick(object sender, EventArgs e)
         {
-            if (_disposingService != null)
+            Task.Factory.StartNew(Update);
+        }
+
+        /// <summary>
+        /// Cleans up the service instances when disposing is requested.
+        /// </summary>
+        protected override void DisposeCore()
+        {
+            base.DisposeCore();
+
+            if (_dispositioningService != null)
             {
-                _disposingService.Dispose();
+                _dispositioningService.Dispose();
             }
             if (_operationService != null)
             {
@@ -134,98 +154,20 @@ namespace DispatchingTool
             }
         }
 
-        #endregion
-
-        #region Event-Handler
-
-        private void timer_Tick(object sender, EventArgs e)
-        {
-            Task.Factory.StartNew(Update);
-        }
-
-        #endregion
-
-        #region Methods
-
         private void Update()
         {
             try
             {
-                //Reconnect to the service if the last connection was not successful.
-                if (Error)
-                {
-                    if (_disposingService != null)
-                    {
-                        _disposingService.Dispose();
-                    }
-                    _disposingService = ServiceFactory.GetCallbackServiceWrapper<IDispositioningService>(this);
-
-                    if (_operationService != null)
-                    {
-                        _operationService.Dispose();
-                    }
-                    _operationService = ServiceFactory.GetCallbackServiceWrapper<IOperationService>(this);
-
-                }
-
-                Error = false;
-
-                //Get last operation. At the moment only dispatching works for the last operation.
-                IList<int> operationIds = _operationService.Instance.GetOperationIds(Constants.OfpMaxAge, Constants.OfpOnlyNonAcknowledged, 1);
-                int operationId = operationIds.FirstOrDefault();
-                if (operationId != 0)
-                {
-                    if (CurrentOperation == null || CurrentOperation.Id != operationId)
-                    {
-                        CurrentOperation = _operationService.Instance.GetOperationById(operationId);
-                        App.Current.Dispatcher.Invoke(Resources.Clear);
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
-                else
-                {
-                    App.Current.Dispatcher.Invoke(Resources.Clear);
-                    CurrentOperation = null;
-                    OnPropertyChanged("CurrentOperation");
-                    return;
-                }
-
-                //Get the emk-configuration 
-                using (var service = ServiceFactory.GetServiceWrapper<IEmkService>())
-                {
-                    List<EmkResource> emkResources = service.Instance.GetAllResources().Where(x => x.IsActive).ToList();
-                    IList<OperationResource> alarmedResources = service.Instance.GetFilteredResources(CurrentOperation.Resources);
-                    foreach (EmkResource emkResource in emkResources)
-                    {
-                        ResourceItem resourceItem = new ResourceItem(emkResource);
-
-                        //Resources alarmed by the alarming institute can not be dispatched or recalled!
-                        resourceItem.CanGetDispatched = !alarmedResources.Any(x => emkResource.IsMatch(x));
-                        App.Current.Dispatcher.Invoke(() => Resources.Add(resourceItem));
-                    }
-                }
-
-                //Get the resources which are allready dispatched to current operation.
-                string[] dispatchedResources = _disposingService.Instance.GetDispatchedResources(CurrentOperation.Id);
-                foreach (ResourceItem item in Resources)
-                {
-                    if (dispatchedResources.Contains(item.EmkResourceItem.Id))
-                    {
-                        item.Dispatched = true;
-                    }
-                }
+                UpdateCore();
             }
             catch (Exception ex)
             {
-                //This exceptions could occur if the service connection was lost! All other exceptions are not ok --> Throw them!
+                // This exceptions could occur if the service connection was lost.
                 if (ex is EndpointNotFoundException || ex is InvalidOperationException || ex is CommunicationException)
                 {
                     CurrentOperation = null;
                     Error = true;
-                    App.Current.Dispatcher.Invoke(Resources.Clear);
+                    App.Current.Dispatcher.Invoke((Action)Resources.Clear);
                 }
                 else
                 {
@@ -234,18 +176,85 @@ namespace DispatchingTool
                 }
             }
 
-            //Update the properties
-            App.Current.Dispatcher.Invoke(() =>
+            App.Current.Dispatcher.Invoke((Action)(() =>
             {
                 OnPropertyChanged("Error");
                 OnPropertyChanged("Resources");
                 OnPropertyChanged("CurrentOperation");
-            });
+            }));
+        }
+
+        private void UpdateCore()
+        {
+            ReconnectIfError();
+
+            Error = false;
+
+            // Get last operation. At the moment dispatching only works for the latest operation.
+            IList<int> operationIds = _operationService.Instance.GetOperationIds(Constants.OfpMaxAge, Constants.OfpOnlyNonAcknowledged, 1);
+            if (operationIds.Count == 0)
+            {
+                App.Current.Dispatcher.Invoke((Action)Resources.Clear);
+                CurrentOperation = null;
+                OnPropertyChanged("CurrentOperation");
+                return;
+            }
+
+            int operationId = operationIds.FirstOrDefault();
+
+            bool isNewOperation = (CurrentOperation == null || CurrentOperation.Id != operationId);
+            if (!isNewOperation)
+            {
+                return;
+            }
+
+            CurrentOperation = _operationService.Instance.GetOperationById(operationId);
+            App.Current.Dispatcher.Invoke((Action)Resources.Clear);
+
+            using (var service = ServiceFactory.GetServiceWrapper<IEmkService>())
+            {
+                List<EmkResource> emkResources = service.Instance.GetAllResources().Where(x => x.IsActive).ToList();
+                IList<OperationResource> alarmedResources = service.Instance.GetFilteredResources(CurrentOperation.Resources);
+                foreach (EmkResource emkResource in emkResources)
+                {
+                    ResourceItem resourceItem = new ResourceItem(emkResource);
+                    resourceItem.IsManualDispatchAllowed = !alarmedResources.Any(x => emkResource.IsMatch(x));
+
+                    App.Current.Dispatcher.Invoke((Action)(() => Resources.Add(resourceItem)));
+                }
+            }
+
+            string[] dispatchedResources = _dispositioningService.Instance.GetDispatchedResources(CurrentOperation.Id);
+            foreach (ResourceItem item in Resources)
+            {
+                if (dispatchedResources.Contains(item.EmkResourceItem.Id))
+                {
+                    item.IsDispatched = true;
+                }
+            }
+        }
+
+        private void ReconnectIfError()
+        {
+            if (Error)
+            {
+                if (_dispositioningService != null)
+                {
+                    _dispositioningService.Dispose();
+                }
+                _dispositioningService = ServiceFactory.GetCallbackServiceWrapper<IDispositioningService>(this);
+
+                if (_operationService != null)
+                {
+                    _operationService.Dispose();
+                }
+                _operationService = ServiceFactory.GetCallbackServiceWrapper<IOperationService>(this);
+            }
         }
 
         #endregion
 
-        #region Implementation of IDispositioningServiceCallback
+        #region IDispositioningServiceCallback Members
 
         /// <summary>
         /// Called by the service after a resource was dispatched or recalled.
@@ -253,40 +262,46 @@ namespace DispatchingTool
         /// <param name="evt">The event data that describes the event.</param>
         public void OnEvent(DispositionEventArgs evt)
         {
-            if (CurrentOperation != null && evt.OperationId == CurrentOperation.Id)
+            if (CurrentOperation == null || evt.OperationId != CurrentOperation.Id)
             {
-                if (evt.Action == DispositionEventArgs.ActionType.Dispatch)
+                return;
+            }
+
+            if (evt.Action == DispositionEventArgs.ActionType.Dispatch)
+            {
+                using (var service = ServiceFactory.GetServiceWrapper<IEmkService>())
                 {
-                    using (var service = ServiceFactory.GetServiceWrapper<IEmkService>())
+                    EmkResource emkResource = service.Instance.GetAllResources().FirstOrDefault(x => x.IsActive && x.Id == evt.EmkResourceId);
+                    if (emkResource != null)
                     {
-                        EmkResource emkResource = service.Instance.GetAllResources().FirstOrDefault(x => x.IsActive && x.Id == evt.EmkResourceId);
-                        if (emkResource != null)
+                        ResourceItem resourceItem = new ResourceItem(emkResource);
+                        resourceItem.IsManualDispatchAllowed = true;
+                        resourceItem.IsDispatched = true;
+
+                        App.Current.Dispatcher.Invoke((Action)(() =>
                         {
-                            ResourceItem resourceItem = new ResourceItem(emkResource);
-                            resourceItem.CanGetDispatched = true;
-                            resourceItem.Dispatched = true;
-                            App.Current.Dispatcher.Invoke(() =>
-                            {
-                                OnPropertyChanged("Resources");
-                                Resources.Add(resourceItem);
-                            });
-                        }
+                            OnPropertyChanged("Resources");
+                            Resources.Add(resourceItem);
+                        }));
                     }
                 }
-                else if (evt.Action == DispositionEventArgs.ActionType.Recall)
+            }
+            else if (evt.Action == DispositionEventArgs.ActionType.Recall)
+            {
+                ResourceItem resource = Resources.FirstOrDefault(x => x.EmkResourceItem.Id == evt.EmkResourceId);
+                if (resource != null)
                 {
-                    ResourceItem resource = Resources.FirstOrDefault(x => x.EmkResourceItem.Id == evt.EmkResourceId);
-                    if (resource != null)
+                    App.Current.Dispatcher.Invoke((Action)(() =>
                     {
                         Resources.Remove(resource);
-                    }
+                    }));
                 }
             }
         }
 
         #endregion
 
-        #region Implementation of IOperationServiceCallback
+        #region IOperationServiceCallback Members
 
         /// <summary>
         /// Called when an operation was acknowledged.
@@ -294,15 +309,18 @@ namespace DispatchingTool
         /// <param name="id">The id of the operation that was acknowledged.</param>
         public void OnOperationAcknowledged(int id)
         {
-            if (CurrentOperation != null && CurrentOperation.Id == id)
+            if (CurrentOperation == null || CurrentOperation.Id != id)
             {
-                CurrentOperation = null;
-                App.Current.Dispatcher.Invoke(() =>
-                {
-                    Resources.Clear();
-                    OnPropertyChanged("CurrentOperation");
-                });
+                return;
             }
+
+            CurrentOperation = null;
+
+            App.Current.Dispatcher.Invoke((Action)(() =>
+            {
+                Resources.Clear();
+                OnPropertyChanged("CurrentOperation");
+            }));
         }
 
         #endregion

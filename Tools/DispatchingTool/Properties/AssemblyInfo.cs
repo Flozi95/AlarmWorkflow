@@ -23,11 +23,11 @@ using AlarmWorkflow.Shared.Core;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DispatchingTool")]
+[assembly: AssemblyTitle("AlarmWorkflow.Tools.Dispatching")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("The AlarmWorkflow-Team")]
-[assembly: AssemblyProduct("DispatchingTool")]
+[assembly: AssemblyProduct("AlarmWorkflow.Tools.Dispatching")]
 [assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
