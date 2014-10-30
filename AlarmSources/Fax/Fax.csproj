@@ -51,6 +51,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfigChangedEventArgs.cs" />
     <Compile Include="ContextParameterKeys.cs" />
     <Compile Include="Extensibility\IOcrSoftware.cs" />
     <Compile Include="Extensibility\OcrProcessOptions.cs" />
