@@ -269,32 +269,20 @@ namespace AlarmWorkflow.Tools.Dispatching
 
             if (evt.Action == DispositionEventArgs.ActionType.Dispatch)
             {
-                using (var service = ServiceFactory.GetServiceWrapper<IEmkService>())
+                ResourceItem resource = Resources.FirstOrDefault(x => x.EmkResourceItem.Id == evt.EmkResourceId);
+                if (resource != null && !resource.IsDispatched)
                 {
-                    EmkResource emkResource = service.Instance.GetAllResources().FirstOrDefault(x => x.IsActive && x.Id == evt.EmkResourceId);
-                    if (emkResource != null)
-                    {
-                        ResourceItem resourceItem = new ResourceItem(emkResource);
-                        resourceItem.IsManualDispatchAllowed = true;
-                        resourceItem.IsDispatched = true;
-
-                        App.Current.Dispatcher.Invoke((Action)(() =>
-                        {
-                            OnPropertyChanged("Resources");
-                            Resources.Add(resourceItem);
-                        }));
-                    }
+                    resource.IsDispatched = true;
+                    OnPropertyChanged("Resources");
                 }
             }
             else if (evt.Action == DispositionEventArgs.ActionType.Recall)
             {
                 ResourceItem resource = Resources.FirstOrDefault(x => x.EmkResourceItem.Id == evt.EmkResourceId);
-                if (resource != null)
+                if (resource != null && resource.IsDispatched)
                 {
-                    App.Current.Dispatcher.Invoke((Action)(() =>
-                    {
-                        Resources.Remove(resource);
-                    }));
+                    resource.IsDispatched = false;
+                    OnPropertyChanged("Resources");
                 }
             }
         }
