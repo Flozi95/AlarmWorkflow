@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -308,13 +309,13 @@ namespace AlarmWorkflow.AlarmSource.Fax
         void IAlarmSource.Initialize(IServiceProvider serviceProvider)
         {
             _configuration = new FaxConfiguration(serviceProvider);
-            _configuration.ConfigurationChanged += _configuration_ConfigurationChanged;
+            _configuration.PropertyChanged += _configuration_PropertyChanged;
 
             InitializeFaxPaths();
             InitializeOcrSoftware();
             InitializeParser();
         }
-        
+
         void IAlarmSource.RunThread()
         {
             while (true)
@@ -340,22 +341,19 @@ namespace AlarmWorkflow.AlarmSource.Fax
 
         #region Event-Handler
 
-        void _configuration_ConfigurationChanged(object sender, ConfigChangedEventArgs e)
+        private void _configuration_PropertyChanged(object sender, PropertyChangedEventArgs args)
         {
-            foreach (string key in e.Keys)
+            switch (args.PropertyName)
             {
-                switch (key)
-                {
-                    case "AlarmfaxParser":
-                        InitializeParser();
-                        break;
-                    case "OCR.Path":
-                        AssertCustomOcrPathExist();
-                        break;
-                    case "FaxPaths":
-                        InitializeFaxPaths();
-                        break;
-                }   
+                case "AlarmfaxParser":
+                    InitializeParser();
+                    break;
+                case "OCR.Path":
+                    AssertCustomOcrPathExist();
+                    break;
+                case "FaxPaths":
+                    InitializeFaxPaths();
+                    break;
             }
         }
 
@@ -365,7 +363,7 @@ namespace AlarmWorkflow.AlarmSource.Fax
 
         void IDisposable.Dispose()
         {
-            _configuration.ConfigurationChanged -= _configuration_ConfigurationChanged;
+            _configuration.PropertyChanged -= _configuration_PropertyChanged;
             _configuration.Dispose();
             _configuration = null;
         }

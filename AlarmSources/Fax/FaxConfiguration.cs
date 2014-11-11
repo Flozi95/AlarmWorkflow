@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using AlarmWorkflow.BackendService.SettingsContracts;
 using AlarmWorkflow.Shared;
@@ -24,7 +25,7 @@ using AlarmWorkflow.Shared.Specialized;
 
 namespace AlarmWorkflow.AlarmSource.Fax
 {
-    internal sealed class FaxConfiguration : DisposableObject
+    internal sealed class FaxConfiguration : DisposableObject, INotifyPropertyChanged
     {
         #region Constants
 
@@ -39,8 +40,6 @@ namespace AlarmWorkflow.AlarmSource.Fax
         #endregion
 
         #region Properties
-
-        internal event EventHandler<ConfigChangedEventArgs> ConfigurationChanged;
 
         internal string FaxPath
         {
@@ -100,43 +99,29 @@ namespace AlarmWorkflow.AlarmSource.Fax
 
         #region Event-Handler
 
-        void _settings_SettingChanged(object sender, SettingChangedEventArgs e)
+        private void _settings_SettingChanged(object sender, SettingChangedEventArgs e)
         {
-            IEnumerable<SettingKey> keys = e.Keys.ToList();
-            if (keys.All(x => x.Identifier != Identifier) || ConfigurationChanged == null)
-            {
-                return;
-            }
-
-            keys = keys.Where(x => x.Identifier == Identifier);
             List<string> changedKeys = new List<string>();
-
-            foreach (SettingKey key in keys)
+            foreach (SettingKey key in e.Keys)
             {
-                switch (key.Name)
+                if (key.Equals(FaxSettingKeys.AlarmFaxParserAlias))
                 {
-                    case "AlarmfaxParser":
-                        changedKeys.Add("AlarmfaxParser");
-                        break;
-                    case "OCR.Path":
-                        changedKeys.Add("OCR.Path");
-                        break;
-                    case "FaxPath":
-                    case "ArchivePath":
-                    case "AnalysisPath":
-                        if (!changedKeys.Contains("FaxPaths"))
-                        {
-                            changedKeys.Add("FaxPaths");
-                        }
-                        break;
+                    changedKeys.Add("AlarmfaxParser");
+
+                }
+                else if (key.Equals(FaxSettingKeys.OcrPath))
+                {
+                    changedKeys.Add("OCR.Path");
+                }
+                else if ((key.Equals(FaxSettingKeys.FaxPath) || key.Equals(FaxSettingKeys.AnalysisPath) || key.Equals(FaxSettingKeys.ArchivePath)) && !changedKeys.Contains("FaxPaths"))
+                {
+                    changedKeys.Add("FaxPaths");
                 }
             }
 
-            var copy = ConfigurationChanged;
-            if (copy != null)
+            foreach (string key in changedKeys)
             {
-                ConfigChangedEventArgs args = new ConfigChangedEventArgs(changedKeys);
-                copy(this, args);
+                OnPropertyChanged(key);
             }
 
         }
@@ -165,6 +150,20 @@ namespace AlarmWorkflow.AlarmSource.Fax
         }
 
         #endregion
+        
+        #region INotifyPropertyChanged Members
+        
+        public event PropertyChangedEventHandler PropertyChanged;
 
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+            {
+                handler(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+        
+        #endregion
     }
 }
